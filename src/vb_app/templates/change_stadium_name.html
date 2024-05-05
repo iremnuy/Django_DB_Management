@@ -1,0 +1,17 @@
+<!-- change_stadium_name.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Change Stadium Name</title>
+</head>
+<body>
+    <h1>Change Stadium Name</h1>
+    <form method="post">
+        {% csrf_token %}
+        <label for="new_stadium_name">New Stadium Name:</label>
+        <input type="text" id="new_stadium_name" name="new_stadium_name" required>
+        <button type="submit">Change Name</button>
+    </form>
+</body>
+</html>

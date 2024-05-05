@@ -1,0 +1,30 @@
+<!-- add_user.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Add User</title>
+</head>
+<body>
+    <h1>Add User</h1>
+    <form method="post">
+        {% csrf_token %}
+        <!-- Main User Form -->
+        {{ user_form.as_p }}
+
+        <!-- Player Form -->
+        <h2>Add Player</h2>
+        {{ player_form.as_p }}
+
+        <!-- Coach Form -->
+        <h2>Add Coach</h2>
+        {{ coach_form.as_p }}
+
+        <!-- Jury Form -->
+        <h2>Add Jury</h2>
+        {{ jury_form.as_p }}
+
+        <button type="submit">Submit</button>
+    </form>
+</body>
+</html>

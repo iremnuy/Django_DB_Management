@@ -16,7 +16,12 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path
+from vb_app import views
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+    path('login/', views.login_view, name='login'),
+    path('dashboard/', views.dashboard_view, name='dashboard'),
+    path('add_user/', views.add_user_view, name='add_user_view'),
+    path('change_stadium_name/', views.change_stadium_name_view, name='change_stadium_name_view'),
 ]
