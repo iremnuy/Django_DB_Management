@@ -6,25 +6,24 @@
     <title>Add User</title>
 </head>
 <body>
-    <h1>Add User</h1>
-    <form method="post">
-        {% csrf_token %}
-        <!-- Main User Form -->
-        {{ user_form.as_p }}
-
-        <!-- Player Form -->
         <h2>Add Player</h2>
-        {{ player_form.as_p }}
-
-        <!-- Coach Form -->
+        <form method="post">
+            {% csrf_token %}
+            {{ player_form.as_p }}
+            <button type="submit" name="submit_player">Submit Player</button>
+        </form>
         <h2>Add Coach</h2>
-        {{ coach_form.as_p }}
-
-        <!-- Jury Form -->
+        <form method="post">
+            {% csrf_token %}
+            {{ coach_form.as_p }}
+            <button type="submit" name="submit_coach">Submit Coach</button>
+        </form>
+        #form for adding jury 
         <h2>Add Jury</h2>
-        {{ jury_form.as_p }}
-
-        <button type="submit">Submit</button>
-    </form>
+        <form method="post">
+            {% csrf_token %}
+            {{ jury_form.as_p }}
+            <button type="submit" name="submit_jury">Submit Jury</button>
+        </form>
 </body>
 </html>
