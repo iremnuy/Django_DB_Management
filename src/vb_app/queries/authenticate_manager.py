@@ -2,7 +2,7 @@ from django.db import connection
 
 
 def authenticate_manager(username, password):
-    sql="SELECT * FROM DBManager D WHERE D.username = %s AND D.password = %s "
+    sql="SELECT * FROM {table} WHERE username = %s AND password = %s "
 
     with connection.cursor() as cursor:
         cursor.execute(sql, [username, password])

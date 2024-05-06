@@ -6,7 +6,7 @@ class PlayerForm(forms.Form):
     password = forms.CharField(widget=forms.PasswordInput)
     name = forms.CharField(max_length=100)
     surname = forms.CharField(max_length=100)
-    date_of_birth = forms.DateField()
+    date_of_birth = forms.DateField(input_formats=['%d.%m.%Y'])
     height = forms.FloatField()
     weight = forms.FloatField()
 

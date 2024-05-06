@@ -1,0 +1,17 @@
+<!-- dashboard.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Dashboard</title>
+</head>
+<body>
+    <h1>Welcome to the Login Dashboard, Select with which role you will log in</h1>
+    <ul>
+        <li><a href="{% url 'coach_login_view' %}">Login Coach</a></li> #
+        <li><a href="{% url 'player_login_view' %}">Login Player</a></li>
+        <li><a href="{% url 'jury_login_view' %}">Login Jury</a></li>
+
+    </ul>
+</body>
+</html>

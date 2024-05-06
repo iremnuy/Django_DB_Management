@@ -15,5 +15,14 @@
         <input type="text" id="new_stadium_name" name="new_stadium_name">
         <button type="submit">Update</button>
     </form>
+
+    {% if success_message %}
+        <p style="color: green;">{{ success_message }}</p>
+    {% endif %} 
+    
+    {% if failure_msg %}
+        <p style="color: rgb(128, 41, 0);">{{ failure_msg }}</p>
+    {% endif %} 
+
 </body>
 </html>
