@@ -1,17 +1,19 @@
-<!-- change_stadium_name.html -->
+<!-- update_stadium.html -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Change Stadium Name</title>
+    <title>Update Stadium Name</title>
 </head>
 <body>
-    <h1>Change Stadium Name</h1>
+    <h1>Update Stadium Name</h1>
     <form method="post">
         {% csrf_token %}
+        <label for="stadium_id">Stadium ID:</label>
+        <input type="text" id="stadium_id" name="stadium_id" value="{{ stadium_id }}" >
         <label for="new_stadium_name">New Stadium Name:</label>
-        <input type="text" id="new_stadium_name" name="new_stadium_name" required>
-        <button type="submit">Change Name</button>
+        <input type="text" id="new_stadium_name" name="new_stadium_name">
+        <button type="submit">Update</button>
     </form>
 </body>
 </html>

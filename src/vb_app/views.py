@@ -94,4 +94,17 @@ def add_user_view(request):
     return render(request, 'add_user.html', {'player_form': player_form, 'coach_form': coach_form, 'jury_form': jury_form})
 def change_stadium_name_view(request):
     # Logic for changing stadium name
-    return render(request, 'change_stadium_name.html')
+    if request.method == 'POST':
+        new_stadium_name = request.POST.get('new_stadium_name')
+        stadium_id=request.POST.get('stadium_id')
+        # Update stadium name in the database
+        query = "UPDATE MatchSession M SET M.stadium_name = %s WHERE M.stadium_ID = %s"
+        params = (new_stadium_name, stadium_id)
+        with connection.cursor() as cursor:
+            cursor.execute(query, params)
+            # Commit the transaction if needed
+            # connection.commit()
+        # Redirect or render success message
+        return redirect('update_stadium_success')
+    else:
+        return render(request, 'change_stadium_name.html')
