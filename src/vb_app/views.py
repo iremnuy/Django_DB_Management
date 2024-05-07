@@ -1,6 +1,6 @@
 from django.shortcuts import render, redirect
 from django.contrib.auth import authenticate, login
-from vb_app.queries.authenticate_manager import authenticate_manager
+from vb_app.queries.authenticate_manager import  authenticate_manager,see_stadiums as see_std
 from .forms import PlayerForm, CoachForm, JuryForm
 from django.db import connection
 
@@ -14,18 +14,57 @@ def gen_login(request): #general login choice router like db manager login,coach
     return render(request,'general_login.html')
 
 def coach_login_view(request):
-    if request.method=='POST':
+    if request.method == 'POST':
         username = request.POST.get('username')
-        password=request.POST.get('password')
-        succes=authenticate_manager(table='Coach',username=username,password=password)
+        password = request.POST.get('password')
+        success = authenticate_manager(table='Coach', username=username, password=password)
+        if success:
+            return redirect('dash_coach')  # Redirect to the dashboard URL pattern
+        else:
+            # Handle invalid login
+            return render(request, 'login.html', {'error': 'Invalid username or password.'})
+    return render(request, 'login.html')
 
-    
-    
+def dashboard_coach(request):
+    return render(request,'dash_coach.html') 
+
+def see_stadiums(request) :
+    if request.method == 'GET':
+        stadiums = see_std()
+        if stadiums:
+            return render(request,'stadiums.html',{'stadiums':stadiums})  # Redirect to the dashboard URL pattern
+        else:
+            # Handle invalid login
+            return render(request, 'result.html', {'message': 'An error occured, maybe there is no stadium ?'})
+    return render(request, 'dash_coach.html')
+
+
 def jury_login_view(request):
     if request.method=='POST':
         username=request.POST.get('username')
         password=request.POST.get('password')
-        succes=authenticate_manager(table='Jury',username=username,password=password)
+        success=authenticate_manager(table='Jury',username=username,password=password)
+        if success:
+            return redirect('dash_jury')  # Redirect to the dashboard URL pattern
+        else:
+            # Handle invalid login
+            return render(request, 'login.html', {'error': 'Invalid username or password.'})
+    return render(request, 'login.html')
+
+def player_login_view(request):
+    if request.method=='POST':
+        username=request.POST.get('username')
+        password=request.POST.get('password')
+        success=authenticate_manager(table='Jury',username=username,password=password)
+        if success:
+            return redirect('dash_player')  # Redirect to the dashboard URL pattern
+        else:
+            # Handle invalid login
+            return render(request, 'login.html', {'error': 'Invalid username or password.'})
+    return render(request, 'login.html')
+
+
+
 def login_view(request):
     if request.method == 'POST':
         username = request.POST.get('username')

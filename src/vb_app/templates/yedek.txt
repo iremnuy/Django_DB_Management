@@ -1,0 +1,5 @@
+<!--
+        <li><a href="{% url 'delete_match' %}">Delete Match Session</a></li> 
+        <li><a href="{% url 'add_match' %}">Add Match Session</a></li>
+        <li><a href="{% url 'create_squad' %}">Create Squad For Match Session</a></li>  
+        -->

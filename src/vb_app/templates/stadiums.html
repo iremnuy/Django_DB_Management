@@ -1,0 +1,16 @@
+<!-- stadiums.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Stadiums</title>
+</head>
+<body>
+    <h1>Stadiums</h1>
+    <ul>
+        {% for stadium in stadiums %}
+            <li>{{ stadium.0 }} - {{ stadium.1 }}</li>
+        {% endfor %}
+    </ul>
+</body>
+</html>
