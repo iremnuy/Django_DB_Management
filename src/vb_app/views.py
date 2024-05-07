@@ -38,6 +38,27 @@ def see_stadiums(request) :
             return render(request, 'result.html', {'message': 'An error occured, maybe there is no stadium ?'})
     return render(request, 'dash_coach.html')
 
+def delete_match(request):
+    if request.method == 'POST':
+        match_id = request.POST.get('match_id')
+        if match_id:
+            # Delete match from the database
+            query = "DELETE FROM MatchSession WHERE session_ID = %s" #also delete from sguadsession
+            query2 = "DELETE FROM SquadSession WHERE session_ID = %s"
+            params = (match_id,)
+            with connection.cursor() as cursor:
+                cursor.execute(query, params)
+                cursor.execute(query2, params)
+                # Commit the transaction if needed
+                # connection.commit()
+            # Redirect or render success message
+            success_message="You just deleted the match and fully used your political power"
+        else:
+            failure_msg="Please provide a match id!"
+            return render(request,'delete_match.html',{'failure_msg' :failure_msg})
+        return render(request,'delete_match.html',{'success_message' :success_message})
+    else:
+        return render(request, 'delete_match.html')
 
 def jury_login_view(request):
     if request.method=='POST':

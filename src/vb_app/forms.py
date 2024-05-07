@@ -1,7 +1,7 @@
 # forms.py
 from django import forms
 
-class PlayerForm(forms.Form):
+class PlayerForm(forms.Form): #TODO : Ensure that every player has been inserted with at least one position and one team to the database
     username = forms.CharField(max_length=100)
     password = forms.CharField(widget=forms.PasswordInput)
     name = forms.CharField(max_length=100)
