@@ -40,11 +40,11 @@ def see_stadiums(request) :
 
 def delete_match(request):
     if request.method == 'POST':
-        match_id = request.POST.get('match_id')
+        match_id = request.POST.get('session_id')
         if match_id:
             # Delete match from the database
             query = "DELETE FROM MatchSession WHERE session_ID = %s" #also delete from sguadsession
-            query2 = "DELETE FROM SquadSession WHERE session_ID = %s"
+            query2 = "DELETE FROM SessionSquads WHERE session_ID = %s"
             params = (match_id,)
             with connection.cursor() as cursor:
                 cursor.execute(query, params)
@@ -55,8 +55,8 @@ def delete_match(request):
             success_message="You just deleted the match and fully used your political power"
         else:
             failure_msg="Please provide a match id!"
-            return render(request,'delete_match.html',{'failure_msg' :failure_msg})
-        return render(request,'delete_match.html',{'success_message' :success_message})
+            return render(request,'delete_match.html',{'message' :failure_msg})
+        return render(request,'delete_match.html',{'message' :success_message})
     else:
         return render(request, 'delete_match.html')
 

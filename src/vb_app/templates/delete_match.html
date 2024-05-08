@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Delete Matches by Session ID</title>
+</head>
+<body>
+    <h1>Delete Matches by Session ID</h1>
+    <form method="post" action="{% url 'delete_match' %}">
+        {% csrf_token %}
+        <label for="session_id">Session ID:</label>
+        <input type="text" id="session_id" name="session_id" required>
+        <button type="submit">Delete Matches</button>
+    </form>
+    {% if message %}
+    <p>{{ message }}</p>
+    {% endif %}
+</body>
+</html>

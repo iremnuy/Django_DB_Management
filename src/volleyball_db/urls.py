@@ -31,7 +31,6 @@ urlpatterns = [
     path('dash_coach',views.dashboard_coach,name='dash_coach'),
     path('see_std/',views.see_stadiums,name='see_stadiums'),
     path('delete_match/',views.delete_match,name='delete_match'),
-   
 
 ]
 """

@@ -1,6 +1,8 @@
 from MySQLdb import DatabaseError
 from django.db import connection
 
+#ALL SQL QUERIES ARE WRITTEN IN THIS FILE
+
 
 def authenticate_manager(username, password, table):
     sql = f"SELECT * FROM {table} WHERE username = %s AND password = %s"
