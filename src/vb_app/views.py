@@ -27,6 +27,8 @@ def coach_login_view(request):
 
 def dashboard_coach(request):
     return render(request,'dash_coach.html') 
+def dashboard_jury(request):
+    return render(request,'dash_jury.html')
 
 def see_stadiums(request) :
     if request.method == 'GET':
@@ -64,8 +66,9 @@ def jury_login_view(request):
     if request.method=='POST':
         username=request.POST.get('username')
         password=request.POST.get('password')
-        success=authenticate_manager(table='Jury',username=username,password=password)
+        success=authenticate_manager(table='Jury',username=username,password=password) #check the jury table if match
         if success:
+            request.session['username'] = username  # Store the username in the session TODO do this for other logins
             return redirect('dash_jury')  # Redirect to the dashboard URL pattern
         else:
             # Handle invalid login
@@ -105,6 +108,20 @@ def login_view(request):
 
 def dashboard_view(request):
     return render(request, 'dashboard.html')
+
+def view_ratings(request):
+    jury_name=request.session['username']
+    with connection.cursor() as cursor:
+        cursor.execute("""
+            SELECT COUNT(DISTINCT session_id) AS total_rated_sessions,
+                    AVG(rating) AS avg_rating
+            FROM MatchSession
+            WHERE assigned_jury_username = %s
+        """, [jury_name])
+        row = cursor.fetchone()
+        total_rated_sessions = row[0] if row[0] else 0
+        avg_rating = row[1] if row[1] else 0
+    return render(request, 'view_ratings.html', {'total_rated_sessions': total_rated_sessions, 'avg_rating': avg_rating})
 
 
 def add_user_view(request):
