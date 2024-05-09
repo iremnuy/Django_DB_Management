@@ -9,6 +9,7 @@ class PlayerForm(forms.Form): #TODO : Ensure that every player has been inserted
     date_of_birth = forms.DateField(input_formats=['%d.%m.%Y'])
     height = forms.FloatField()
     weight = forms.FloatField()
+    position= forms.CharField(max_length=100) 
 
 class CoachForm(forms.Form):
     username = forms.CharField(max_length=100)
