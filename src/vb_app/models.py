@@ -7,8 +7,6 @@
 # Feel free to rename the models, but don't rename db_table values or field names.
 from django.db import models
 
-from django.db import models
-
 class Users(models.Model):
     username = models.CharField(max_length=50, primary_key=True)
     password = models.CharField(max_length=50)
