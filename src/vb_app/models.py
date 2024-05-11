@@ -65,8 +65,8 @@ class Agreement(models.Model):
     channel = models.ForeignKey(Channel, on_delete=models.CASCADE)
 
 class PlaysIn(models.Model):
-    username = models.CharField(max_length=50)
-    team = models.ForeignKey(Team, on_delete=models.CASCADE)
+    username = models.CharField(max_length=50,null=True)
+    team = models.ForeignKey(Team, on_delete=models.CASCADE,null=True)
     #player_teams_ID = models.IntegerField(null=True)  # You might need to adjust this field according to your requirements, primary key yap irem
     
     class Meta:
@@ -104,15 +104,15 @@ class AssignedTo(models.Model):
     session = models.OneToOneField(MatchSession, primary_key=True, on_delete=models.CASCADE)
     stadium = models.ForeignKey(Stadium, on_delete=models.CASCADE, null=True)
     assigned_jury_username = models.CharField(max_length=50)
-    rating = models.IntegerField(null=True)
+    rating = models.FloatField(null=True)
 
 class PlayerInMatch(models.Model):
     session = models.ForeignKey(MatchSession, on_delete=models.CASCADE, null=True)
-    player = models.ForeignKey(Players, on_delete=models.CASCADE, null=True)
+    player_username = models.ForeignKey(Players, on_delete=models.CASCADE, null=True, to_field='username')
     position = models.ForeignKey(Position, on_delete=models.CASCADE, null=True)
 
     class Meta:
-        unique_together = ('session', 'player')  # Define a composite unique constraint
+        unique_together = ('session', 'player_username')  # Define a composite unique constraint
 
 class PlayedBy(models.Model):
     session = models.OneToOneField(MatchSession, primary_key=True, on_delete=models.CASCADE)
