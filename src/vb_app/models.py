@@ -7,28 +7,32 @@
 # Feel free to rename the models, but don't rename db_table values or field names.
 from django.db import models
 
-class Users(models.Model):
-    username = models.CharField(max_length=50, primary_key=True)
-    password = models.CharField(max_length=50)
-    name = models.CharField(max_length=50)
-    surname = models.CharField(max_length=50)
+from volleyball_db import settings
+
 
 class Players(models.Model):
-    player_username = models.CharField(max_length=50, primary_key=True)
-    date_of_birth = models.DateField()
+    username = models.CharField(max_length=50, primary_key=True)
+    password = models.CharField(max_length=50,null=True)
+    name = models.CharField(max_length=50,null=True)
+    surname = models.CharField(max_length=50,null=True)
+    date_of_birth = models.TextField()
     height = models.IntegerField()
     weight = models.IntegerField()
-    user = models.OneToOneField(Users, on_delete=models.CASCADE, related_name='player')
 
 class Coaches(models.Model):
-    coach_username = models.CharField(max_length=50, primary_key=True)
+    username = models.CharField(max_length=50, primary_key=True)
     nationality = models.CharField(max_length=50)
-    user = models.OneToOneField(Users, on_delete=models.CASCADE, related_name='coach')
+    name = models.CharField(max_length=50,null=True)
+    surname = models.CharField(max_length=50,null=True)
+    password = models.CharField(max_length=50,null=True)
 
 class Juries(models.Model):
-    jury_username = models.CharField(max_length=50, primary_key=True)
+    username = models.CharField(max_length=50, primary_key=True)
     nationality = models.CharField(max_length=50)
-    user = models.OneToOneField(Users, on_delete=models.CASCADE, related_name='jury')
+    name = models.CharField(max_length=50,null=True)
+    surname = models.CharField(max_length=50,null=True)
+    password = models.CharField(max_length=50,null=True)
+
 
 class Position(models.Model):
     position_id = models.IntegerField(primary_key=True)
@@ -36,11 +40,11 @@ class Position(models.Model):
 
 class PlayerPositions(models.Model):
     player_positions_ID = models.CharField(max_length=50, null=True)  # You might need to adjust this field according to your requirements
-    player_username = models.CharField(max_length=50, null=True)
+    username = models.CharField(max_length=50, null=True)
     position = models.ForeignKey(Position, on_delete=models.CASCADE)
 
     class Meta:
-        unique_together = ('player_username', 'position')  # Define a composite unique constraint
+        unique_together = ('username', 'position')  # Define a composite unique constraint
 
 class Team(models.Model):
     team_id = models.IntegerField(primary_key=True)
@@ -61,24 +65,26 @@ class Agreement(models.Model):
     channel = models.ForeignKey(Channel, on_delete=models.CASCADE)
 
 class PlaysIn(models.Model):
-    player_username = models.CharField(max_length=50)
+    username = models.CharField(max_length=50)
     team = models.ForeignKey(Team, on_delete=models.CASCADE)
-    team_type = models.CharField(max_length=50)
+    #player_teams_ID = models.IntegerField(null=True)  # You might need to adjust this field according to your requirements, primary key yap irem
     
     class Meta:
-        unique_together = ('player_username', 'team')  # Define a composite unique constraint
+        unique_together = ('username', 'team')  # Define a composite unique constraint
 
 class MatchSession(models.Model):
     session_id = models.IntegerField(primary_key=True)
     team = models.ForeignKey(Team, on_delete=models.CASCADE, null=True) #nulllable ise burayı öyle yap 
-    assigned_jury_username = models.ForeignKey(Juries,max_length=50, null=True,on_delete=models.CASCADE) # Attention maybe it is not cascade
+    #assigned_jury_username = models.ForeignKey(Juries,max_length=50, null=True,on_delete=models.CASCADE) # Attention maybe it is not cascade
      # Assuming this field exists in your database schema
-    stadium_id = models.IntegerField( null=True)  # Assuming this field exists in your database schema
-    time_slot = models.DateTimeField(null=True )  # Assuming this field exists in your database schema
-    date = models.DateField(null=True)  # Assuming this field exists in your database schema
+    #stadium_id = models.IntegerField( null=True)  # Assuming this field exists in your database schema
+    #time_slot = models.DateTimeField(null=True )  # Assuming this field exists in your database schema
+    #date = models.DateField(null=True)  # Assuming this field exists in your database schema
+
 
     class Meta:
-        unique_together = ('stadium_id', 'time_slot', 'date')  # Define a composite unique constraint
+        unique_together = ('session_id', 'team')  # Define a composite unique constraint
+         #irem : sildim burayo neden var ki , yanlış 
 
 class Stadium(models.Model):
     stadium_id = models.IntegerField(primary_key=True)
@@ -87,12 +93,12 @@ class Stadium(models.Model):
 
 class PlayedIn(models.Model):
     stadium = models.ForeignKey(Stadium, on_delete=models.CASCADE, null=True)
-    session = models.ForeignKey(MatchSession, on_delete=models.CASCADE, null=True)
+    session = models.ForeignKey(MatchSession, on_delete=models.CASCADE, null=True, unique=True)
     time_slot = models.IntegerField()
     date = models.DateField()
 
     class Meta:
-        unique_together = ('stadium', 'session', 'time_slot', 'date')  # Define a composite unique constraint
+        unique_together = ('stadium', 'time_slot', 'date')  # Define a composite unique constraint irem değiştirdim 
 
 class AssignedTo(models.Model):
     session = models.OneToOneField(MatchSession, primary_key=True, on_delete=models.CASCADE)
