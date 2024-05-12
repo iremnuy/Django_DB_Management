@@ -326,7 +326,7 @@ def add_match(request):
 def add_squad(request):
     print("hello")
     form= SquadForm()
-    session_id,team_id,players=get_players_of_team(request)
+    session_id,time_slot,date,team_id,players=get_players_of_team(request)
     print("session id, team id and players are : ",session_id,team_id,players)
     if request.method == 'POST':
         print("posted")
@@ -347,6 +347,13 @@ def add_squad(request):
             position4 = form.cleaned_data['position4']
             position5 = form.cleaned_data['position5']
             position6 = form.cleaned_data['position6']
+            #zip players and positions as a list of tuples, check if position is valid for that player
+            players=[player1, player2, player3, player4, player5, player6]
+            positions=[position1, position2, position3, position4, position5, position6]
+            zipped_list=zip(players,positions)
+            valid,player=check_positions(zipped_list) #if false return also the player name
+            if not valid:
+                return render(request,'result.html',{'message':'Please enter a valid position for player {player}!'})
             # Execute SQL query to insert new squad into database
             #TODO: CHECK IF THE PLAYERS ARE IN THE SAME TEAM WITH THE COACH
             query_1="SELECT team_id FROM contract WHERE coach_username=%s "
@@ -357,11 +364,13 @@ def add_squad(request):
                 return render(request,'result.html',{'message':'You can only add a squad to your own team!'})
             if session_id_form!=session_id:
                 return render(request,'result.html',{'message':'You can only add a squad to the match session you added!'})
-            for player, position in zip([player1, player2, player3, player4, player5, player6],
-                        [position1, position2, position3, position4, position5, position6]):
-                query = "INSERT INTO playerinmatch (session_id, player_username, position_id) VALUES (%s, %s, %s, %s)"
-                params = (session_id_form, team_id_form, player, position)
-                inserted = execute_query_post(query, params)
+            for player, position in zipped_list:
+                query = "INSERT INTO playerinmatch (session_id, player_username, position_id,time_slot,date) VALUES (%s, %s, %s, %s,%s)"
+                params = (session_id_form, player, position,time_slot,date)
+                try:
+                    inserted = execute_query_post(query, params)
+                except:
+                    return render(request,'result.html',{'message':'Player named {player} has already a match in that time!'})
             return render(request,'result.html',{'message':'Squad added successfully!'})
         else:
             return render(request,'result.html',{'message':form.errors})
@@ -374,4 +383,20 @@ def get_players_of_team(request):
     query = "SELECT username FROM playsin WHERE team_id = %s"
     params = (team_id,)
     players = execute_query(query, params)
-    return session_id,team_id,players
+    query = "SELECT time_slot,date FROM playedin WHERE session_id = %s"
+    params = (session_id,)
+    result = execute_query(query, params)
+    time_slot=result[0][0]
+    date=result[0][1]
+    return session_id,time_slot,date,team_id,players
+
+
+def check_positions(zipped_list):
+    for player, position in zipped_list:
+        query = "SELECT * FROM player WHERE username = %s AND position_id=%s" #there can be multiple positions for a player
+        params = (player,position)
+        result = execute_query(query, params)
+        if not result: #if there is no player with that position
+            return False,player
+    return True,None
+        
