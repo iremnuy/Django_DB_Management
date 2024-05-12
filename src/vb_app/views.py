@@ -121,7 +121,7 @@ def view_ratings(request):
             SELECT COUNT(session_id) AS total_rated_sessions,
                     AVG(rating) AS avg_rating
             FROM assignedto
-            WHERE assigned_jury_username = %s
+            WHERE assigned_jury_username = %s AND rating IS NOT NULL
         """, [jury_name])
         row = cursor.fetchone()
         total_rated_sessions = row[0] if row[0] else 0
