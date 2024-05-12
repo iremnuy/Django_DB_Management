@@ -306,7 +306,7 @@ def add_match(request):
                     return render(request,'result.html',{'message':'An error occured while adding the playedin info!'})
                 link='add_squad'
                 request.session['session_id']=session_id
-                return render(request,'result.html',{'message':'Match session added successfully! \n Here is the information of the match session you added: \n session_id: '+str(session_id)+'\n team_id: '+str(team_id_form)+'\n jury_username: '+str(assigned_jury_username)+'\n date: '+str(date)+'\n time_slot: '+str(time_slot)+'\n stadium_id: '+str(stadium_id),'link':link})
+                return render(request,'result.html',{'message':'Match session added successfully! \n Here is the information of the match session you added: \n session_id: '+str(session_id)+'\n team_id: '+str(team_id_form)+'\n jury_username: '+str(assigned_jury_username)+'\n date: '+str(date)+'\n time_slot: '+str(time_slot)+'\n stadium_id: '+str(stadium_id),'link':link,'link_text':'Add squad to this match session'})
                 #join tables al together recompose them 
                 #return the newly added match session
                 
@@ -352,26 +352,38 @@ def add_squad(request):
             positions=[position1, position2, position3, position4, position5, position6]
             zipped_list=zip(players,positions)
             valid,player=check_positions(zipped_list) #if false return also the player name
+            message=f"Please enter a valid position for player {player}!"
             if not valid:
-                return render(request,'result.html',{'message':'Please enter a valid position for player {player}!'})
+                return render(request,'result.html',{'message':message})
             # Execute SQL query to insert new squad into database
             #TODO: CHECK IF THE PLAYERS ARE IN THE SAME TEAM WITH THE COACH
-            query_1="SELECT team_id FROM contract WHERE coach_username=%s "
+            query_1="SELECT team_id FROM contract WHERE coach_username=%s AND contract_finish>%s"
+            date='2024-05-10' #TODO: do not make hardcoded
             username=request.session['username']
-            params_1=(username)
+            params_1=(username,date,)
             teams=execute_query(query_1,params_1)
-            if team_id_form not in teams:
+            print("teams are",teams)
+            #or check if tuple is empty
+            if (not teams) or team_id_form!=teams[0][0]:
                 return render(request,'result.html',{'message':'You can only add a squad to your own team!'})
             if session_id_form!=session_id:
                 return render(request,'result.html',{'message':'You can only add a squad to the match session you added!'})
-            for player, position in zipped_list:
+            
+            for player, position in zip(players,positions):
+                print("player and position in for are",player,position)
                 query = "INSERT INTO playerinmatch (session_id, player_username, position_id,time_slot,date) VALUES (%s, %s, %s, %s,%s)"
-                params = (session_id_form, player, position,time_slot,date)
+                params = (session_id_form, player, position,time_slot,date,)
                 try:
-                    inserted = execute_query_post(query, params)
+                    print("trying to execute")
+                    execute_query_post(query, params)
                 except:
-                    return render(request,'result.html',{'message':'Player named {player} has already a match in that time!'})
-            return render(request,'result.html',{'message':'Squad added successfully!'})
+                    message=f"Player named {player} has already a match in that time...or maybe you are trying to insert same player in the same squad,please don't!"
+                    #rollback 
+                    query_rollback="DELETE FROM playerinmatch WHERE session_id=%s"
+                    params_rollback=(session_id_form,)
+                    execute_query(query_rollback,params_rollback)
+                    return render(request,'result.html',{'message':message})
+            return render(request,'result.html',{'message':'Squad added successfully! ','link':'dash_coach','link_text':'Go back to dashboard'})
         else:
             return render(request,'result.html',{'message':form.errors})
     else:
@@ -393,10 +405,13 @@ def get_players_of_team(request):
 
 def check_positions(zipped_list):
     for player, position in zipped_list:
-        query = "SELECT * FROM player WHERE username = %s AND position_id=%s" #there can be multiple positions for a player
+        print("player and position are",player,position)
+        query = "SELECT * FROM playerpositions WHERE username = %s AND position_id=%s" #there can be multiple positions for a player
         params = (player,position)
         result = execute_query(query, params)
         if not result: #if there is no player with that position
+            print("player and position are",player,position)
+            print("result is",result)
             return False,player
     return True,None
         

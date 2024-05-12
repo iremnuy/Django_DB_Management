@@ -13,9 +13,13 @@
         <p>No message available.</p>
     {% endif %}
     {% if link %}
-        <p>If you want to go to another page, <a href="{% url link %}">click here</a>.</p>
+            {% if link_text %}
+                <p>{{ link_text }}, <a href="{% url link %}">click here</a>.</p>
+            {% else %}
+                <p>If you want to go to another page, <a href="{% url link %}">click here</a>.</p>
+            {% endif %}
     {% else %}
-        <p>No link available.</p>
+        <p>Nowhere to go....End....Zilch.</p>
     {% endif %}
 </div>
 </body>
