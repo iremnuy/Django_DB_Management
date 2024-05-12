@@ -24,3 +24,11 @@ class JuryForm(forms.Form):
     name = forms.CharField(max_length=100)
     surname = forms.CharField(max_length=100)
     nationality = forms.CharField(max_length=100)
+
+class MatchForm(forms.Form):
+    date = forms.DateField(input_formats=['%Y-%m-%d'])
+    time_slot = forms.IntegerField()
+    stadium = forms.CharField(max_length=50)
+    jury_name= forms.CharField(max_length=50)
+    jury_surname= forms.CharField(max_length=50)
+    team_id= forms.IntegerField() #only its current team

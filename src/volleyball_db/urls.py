@@ -33,9 +33,9 @@ urlpatterns = [
     path('delete_match/',views.delete_match,name='delete_match'),
     path('dash_jury',views.dashboard_jury,name='dash_jury'),
     path('view_ratings/',views.view_ratings,name='view_ratings'),
+    path('add_match/',views.add_match,name='add_match'),
 ]
 """
-path('add_match/',views.add_match,name='add_match'),
 path('create_squad/',views.create_squad,name='create_squad'),
 path('delete_match/',views.delete_match,name='delete_match'),
 path('get_other_pl/',views.get_other_players,name='get_other_players'),

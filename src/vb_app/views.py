@@ -1,7 +1,7 @@
 from django.shortcuts import render, redirect
 from django.contrib.auth import authenticate, login
 from vb_app.queries.authenticate_manager import  authenticate_manager,see_stadiums as see_std
-from .forms import PlayerForm, CoachForm, JuryForm
+from .forms import PlayerForm, CoachForm, JuryForm,MatchForm
 from django.db import connection
 
 
@@ -17,8 +17,9 @@ def coach_login_view(request):
     if request.method == 'POST':
         username = request.POST.get('username')
         password = request.POST.get('password')
-        success = authenticate_manager(table='Coach', username=username, password=password)
+        success = authenticate_manager(table='coaches', username=username, password=password)
         if success:
+            request.session['username'] = username
             return redirect('dash_coach')  # Redirect to the dashboard URL pattern
         else:
             # Handle invalid login
@@ -29,6 +30,8 @@ def dashboard_coach(request):
     return render(request,'dash_coach.html') 
 def dashboard_jury(request):
     return render(request,'dash_jury.html')
+def dashboard_player(request):
+    return render(request,'dash_player.html')
 
 def see_stadiums(request) :
     if request.method == 'GET':
@@ -45,12 +48,10 @@ def delete_match(request):
         match_id = request.POST.get('session_id')
         if match_id:
             # Delete match from the database
-            query = "DELETE FROM MatchSession WHERE session_ID = %s" #also delete from sguadsession
-            query2 = "DELETE FROM SessionSquads WHERE session_ID = %s"
+            query = "DELETE FROM matchsession WHERE session_ID = %s" #also delete from squadsession
             params = (match_id,)
             with connection.cursor() as cursor:
                 cursor.execute(query, params)
-                cursor.execute(query2, params)
                 # Commit the transaction if needed
                 # connection.commit()
             # Redirect or render success message
@@ -66,7 +67,7 @@ def jury_login_view(request):
     if request.method=='POST':
         username=request.POST.get('username')
         password=request.POST.get('password')
-        success=authenticate_manager(table='Jury',username=username,password=password) #check the jury table if match
+        success=authenticate_manager(table='juries',username=username,password=password) #check the jury table if match
         if success:
             request.session['username'] = username  # Store the username in the session TODO do this for other logins
             return redirect('dash_jury')  # Redirect to the dashboard URL pattern
@@ -79,8 +80,9 @@ def player_login_view(request):
     if request.method=='POST':
         username=request.POST.get('username')
         password=request.POST.get('password')
-        success=authenticate_manager(table='Jury',username=username,password=password)
+        success=authenticate_manager(table='players',username=username,password=password)
         if success:
+            request.session['username'] = username  # Store the username in the session
             return redirect('dash_player')  # Redirect to the dashboard URL pattern
         else:
             # Handle invalid login
@@ -113,9 +115,9 @@ def view_ratings(request):
     jury_name=request.session['username']
     with connection.cursor() as cursor:
         cursor.execute("""
-            SELECT COUNT(DISTINCT session_id) AS total_rated_sessions,
+            SELECT COUNT(session_id) AS total_rated_sessions,
                     AVG(rating) AS avg_rating
-            FROM MatchSession
+            FROM assignedto
             WHERE assigned_jury_username = %s
         """, [jury_name])
         row = cursor.fetchone()
@@ -141,7 +143,7 @@ def add_user_view(request):
                 height = form.cleaned_data['height']
                 weight = form.cleaned_data['weight']
                 # Execute SQL query to insert new player into database
-                query = "INSERT INTO Player (username, password, name, surname, date_of_birth, height, weight) VALUES (%s, %s, %s, %s, %s, %s, %s)"
+                query = "INSERT INTO players (username, password, name, surname, date_of_birth, height, weight) VALUES (%s, %s, %s, %s, %s, %s, %s)"
                 params = (username, password, name, surname, date_of_birth, height, weight)
                 inserted=execute_query(query, params)
                 return render(request,'result.html',{'message':'Player added successfully!'})
@@ -158,7 +160,7 @@ def add_user_view(request):
                 surname = form.cleaned_data['surname']
                 nationality = form.cleaned_data['nationality']
                 # Execute SQL query to insert new coach into database
-                query = "INSERT INTO Coach (username, password, name, surname, nationality) VALUES (%s, %s, %s, %s, %s)"
+                query = "INSERT INTO coaches (username, password, name, surname, nationality) VALUES (%s, %s, %s, %s, %s)"
                 params = (username, password, name, surname, nationality)
                 inserted=execute_query(query, params)
                 return render(request,'result.html',{'message':'Coach added successfully!'})
@@ -173,7 +175,7 @@ def add_user_view(request):
                 surname = form.cleaned_data['surname']
                 nationality = form.cleaned_data['nationality']
                 # Execute SQL query to insert new jury into database
-                query = "INSERT INTO Jury (username, password, name, surname, nationality) VALUES (%s, %s, %s, %s, %s)"
+                query = "INSERT INTO juries (username, password, name, surname, nationality) VALUES (%s, %s, %s, %s, %s)"
                 params = (username, password, name, surname, nationality)
                 inserted=execute_query(query, params)
                 return render(request,'result.html',{'message':'Jury added successfully!'})
@@ -184,14 +186,14 @@ def add_user_view(request):
         coach_form = CoachForm()
         jury_form = JuryForm()
     return render(request, 'add_user.html', {'player_form': player_form, 'coach_form': coach_form, 'jury_form': jury_form})
-def change_stadium_name_view(request):
+def change_stadium_name_view(request): #CHECKED
     # Logic for changing stadium name
     if request.method == 'POST':
         new_stadium_name = request.POST.get('new_stadium_name')
         stadium_id=request.POST.get('stadium_id')
         if stadium_id:
             # Update stadium name in the database
-            query = "UPDATE MatchSession M SET M.stadium_name = %s WHERE M.stadium_ID = %s"
+            query = "UPDATE stadium S SET S.stadium_name = %s WHERE S.stadium_ID = %s"
             params = (new_stadium_name, stadium_id)
             with connection.cursor() as cursor:
                 cursor.execute(query, params)
@@ -205,3 +207,70 @@ def change_stadium_name_view(request):
         return render(request,'change_stadium_name.html',{'success_message' :success_message})
     else:
         return render(request, 'change_stadium_name.html')
+    
+def add_match(request):
+    """
+    Coaches shall be able to add a new match session, he/she can only put his/her current team ID. 
+    Stadium info and date, time, timeslot info are up to the coach’s choice but they should not be conflicting.
+        You should check for any type of con- flict with triggers. Also coach can choose(assign) 
+        his/her own session’s assigned jury (by jury’s name and surname). 
+        The rating of the newly added session should be left blank or null at first,
+        till a jury logs in and rates the match.
+    """
+    form = MatchForm()
+    if request.method == 'POST':
+        if 'submit_match' in request.POST:
+            form = MatchForm(request.POST)
+            if form.is_valid():   
+                # Extract form data
+                date = form.cleaned_data['date']
+                time_slot = form.cleaned_data['time_slot']
+                stadium_id = form.cleaned_data['stadium']
+                jury_name = form.cleaned_data['jury_name']
+                jury_surname = form.cleaned_data['jury_surname']
+                team_id = form.cleaned_data['team_id']
+                #check if coach's team is the same with the team_id from contract table , check if contract finish date is not passed
+                query_2="SELECT team_id FROM contract WHERE coach_username=%s AND contract_finish>%s" #TODO: do not make hardcoded
+                username=request.session['username']
+                params_2=(username,date)
+                print("username of coach is",params_2)
+                teams=execute_query(query_2,params_2)
+                if not teams:
+                    message=f"Hello {username},you do not have a team right now or your contract is expired!"
+                    return render(request,'result.html',{'message':message})
+                #CHECK if jury name and surname is valid
+                query_4="SELECT username FROM juries WHERE name=%s AND surname=%s"
+                params_4=(jury_name,jury_surname)
+                assigned_jury_username=execute_query(query_4,params_4)
+                print("jury_username is",assigned_jury_username)
+                if not assigned_jury_username:
+                    return render(request,'result.html',{'message':'Please enter a valid jury name and surname!'})
+                #choose session_id as max(session_id)+1
+                query_session_id="SELECT MAX(session_id) FROM matchsession"
+                session_id=execute_query(query_session_id)
+                session_id=session_id[0][0]+1
+                print("session_id is",session_id)
+                query = "INSERT INTO matchsession (session_id,team_id) VALUES (%s , %s)"
+                params = (session_id,team_id)
+                inserted=execute_query(query, params)
+                
+                query_3="INSERT INTO assignedto (assigned_jury_username, session_id) VALUES (%s , %s)"
+                params3=(assigned_jury_username , session_id)
+                inserted=execute_query(query_3,params3)
+                #check if the date is not conflicting TODO
+                query_5="INSERT INTO playedin (time_slot, date, stadium_id, session_id) VALUES (%s ,%s, %s ,%s)"
+                params5=(time_slot,date,stadium_id,session_id)
+                inserted=execute_query(query_5,params5)
+
+                #join tables al together recompose them 
+                #return the newly added match session
+                return render(request,'result.html',{'message':'Match session added successfully! \n Here is the information of the match session you added: \n session_id: '+str(session_id)+'\n team_id: '+str(team_id)+'\n jury_username: '+str(assigned_jury_username)+'\n date: '+str(date)+'\n time_slot: '+str(time_slot)+'\n stadium_id: '+str(stadium_id)})
+            
+                # Perform any additional processing if needed
+            else:
+                print("form is not valid")
+                print(form.errors)
+                return render(request,'result.html',{'message':form.errors})
+    else :
+        form = MatchForm()        
+        return render(request,'add_match.html',{'match_form':form})

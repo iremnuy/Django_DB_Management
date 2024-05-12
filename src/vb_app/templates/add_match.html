@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Add Match</title>
+</head>
+<body>
+    <h2>Add Match</h2>
+    <form method="post">
+        {% csrf_token %}
+        {{ match_form.as_p }}
+        <button type="submit" name="submit_match">Submit Match</button>
+    </form>
+</body>
+</html>
