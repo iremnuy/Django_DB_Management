@@ -20,7 +20,7 @@ def authenticate_manager(username, password, table):
 #COACH ENDPOINTS
 
 def see_stadiums():
-    sql = "SELECT DISTINCT stadium_country, stadium_name FROM MatchSession"
+    sql = "SELECT DISTINCT stadium_country, stadium_name FROM stadium"
     with connection.cursor() as cursor:
         try:
             cursor.execute(sql)

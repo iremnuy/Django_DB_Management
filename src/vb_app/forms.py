@@ -32,3 +32,19 @@ class MatchForm(forms.Form):
     jury_name= forms.CharField(max_length=50)
     jury_surname= forms.CharField(max_length=50)
     team_id= forms.IntegerField() #only its current team
+
+class SquadForm(forms.Form):
+    player1 = forms.CharField()
+    player2 = forms.CharField()
+    player3 = forms.CharField()
+    player4 = forms.CharField()
+    player5 = forms.CharField()
+    player6 = forms.CharField()
+    team_id = forms.IntegerField()
+    session_id = forms.IntegerField()
+    position1 = forms.IntegerField()
+    position2 = forms.IntegerField()
+    position3 = forms.IntegerField()
+    position4 = forms.IntegerField()
+    position5 = forms.IntegerField()
+    position6 = forms.IntegerField()

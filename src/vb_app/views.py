@@ -1,7 +1,7 @@
 from django.shortcuts import render, redirect
 from django.contrib.auth import authenticate, login
 from vb_app.queries.authenticate_manager import  authenticate_manager,see_stadiums as see_std
-from .forms import PlayerForm, CoachForm, JuryForm,MatchForm
+from .forms import PlayerForm, CoachForm, JuryForm,MatchForm,SquadForm
 from django.db import connection
 
 
@@ -9,7 +9,10 @@ def execute_query(query, params=None):
     with connection.cursor() as cursor:
         cursor.execute(query, params)
         return cursor.fetchall()
-    
+def execute_query_post(query, params=None):
+    with connection.cursor() as cursor:
+        cursor.execute(query, params)
+        return cursor.rowcount
 def gen_login(request): #general login choice router like db manager login,coach login, player login 
     return render(request,'general_login.html')
 
@@ -228,7 +231,7 @@ def add_match(request):
                 stadium_id = form.cleaned_data['stadium']
                 jury_name = form.cleaned_data['jury_name']
                 jury_surname = form.cleaned_data['jury_surname']
-                team_id = form.cleaned_data['team_id']
+                team_id_form = form.cleaned_data['team_id']
                 #check if coach's team is the same with the team_id from contract table , check if contract finish date is not passed
                 query_2="SELECT team_id FROM contract WHERE coach_username=%s AND contract_finish>%s" #TODO: do not make hardcoded
                 username=request.session['username']
@@ -238,6 +241,11 @@ def add_match(request):
                 if not teams:
                     message=f"Hello {username},you do not have a team right now or your contract is expired!"
                     return render(request,'result.html',{'message':message})
+                team_id= teams[0][0]
+                request.session['team_id']=team_id
+                if team_id_form!=team_id:
+                    return render(request,'result.html',{'message':'You can only add a match session to your own team, your team_id is {team_id}!'})
+                print("coach's current team is ",team_id)
                 #CHECK if jury name and surname is valid
                 query_4="SELECT username FROM juries WHERE name=%s AND surname=%s"
                 params_4=(jury_name,jury_surname)
@@ -248,25 +256,65 @@ def add_match(request):
                 #choose session_id as max(session_id)+1
                 query_session_id="SELECT MAX(session_id) FROM matchsession"
                 session_id=execute_query(query_session_id)
-                session_id=session_id[0][0]+1
+                session_id=session_id[0][0]+1 #THIS WILL BE THE NEW SESSION ID
                 print("session_id is",session_id)
+                    
+                #TODO: CREATE A TRIGGER TO INSERT INTO ASSIGNEDTO,PLAYEDBY,PLAYEDIN TABLES !!! ALSO CHECK INTEGRITY 
+                #HERE I USED MULTİPLE CURSOR EXECUTIONS AND CREATED A MANUAL ROLLBACK MECHANISM TO HANDLE THE INTEGRITY CHECKS
+                #TO AVOID USING TRANSACTIONS AND JOINING MULTIPLE TABLES IN A SINGLE QUERY WHICH WOULD LED TO OVERHEAD 
                 query = "INSERT INTO matchsession (session_id,team_id) VALUES (%s , %s)"
-                params = (session_id,team_id)
-                inserted=execute_query(query, params)
-                
+                params = (session_id,team_id_form)
+                rollback="DELETE FROM matchsession WHERE session_id=%s"
                 query_3="INSERT INTO assignedto (assigned_jury_username, session_id) VALUES (%s , %s)"
-                params3=(assigned_jury_username , session_id)
-                inserted=execute_query(query_3,params3)
-                #check if the date is not conflicting TODO
+                params_3=(assigned_jury_username , session_id)
+                rollback_3="DELETE FROM assignedto WHERE session_id=%s and assigned_jury_username=%s"
                 query_5="INSERT INTO playedin (time_slot, date, stadium_id, session_id) VALUES (%s ,%s, %s ,%s)"
                 params5=(time_slot,date,stadium_id,session_id)
-                inserted=execute_query(query_5,params5)
+                rollback_5="DELETE FROM playedin WHERE session_id=%s"
+                query_6="INSERT INTO playedby (session_id, date, time_slot, team_id) VALUES (%s ,%s, %s ,%s)"
+                params6=(session_id,date,time_slot,team_id_form)
+                rollback_6="DELETE FROM playedby WHERE session_id=%s"
+                try:
+                    execute_query_post(query, params)
+                except:
+                    execute_query(rollback,(session_id,))
+                    return render(request,'result.html',{'message':'An error occured while adding the match session!'})
+                try:
+                    execute_query_post(query_3,params_3)
+                except:
+                    execute_query(rollback_3,(session_id,assigned_jury_username))
+                    execute_query(rollback,(session_id,))
+                    return render(request,'result.html',{'message':'An error occured while adding the assigned jury!'})
+                
+                #check if the date is not conflicting TODO
+                try:
+                    execute_query_post(query_5,params5)
+                except:
+                    execute_query(rollback_5,(session_id,))
+                    execute_query(rollback_3,(session_id,assigned_jury_username))
+                    execute_query(rollback,(session_id,))
+                    return render(request,'result.html',{'message':'An error occured while adding the playedin info!'})
 
+                #TODO : add to playedby table fileds : session_id,date,time_slot,team_id
+                try:
+                    execute_query_post(query_6,params6)
+                except:
+                    execute_query(rollback_6,(session_id,))
+                    execute_query(rollback_5,(session_id,))
+                    execute_query(rollback_3,(session_id,assigned_jury_username))
+                    execute_query(rollback,(session_id,))
+                    return render(request,'result.html',{'message':'An error occured while adding the playedin info!'})
+                link='add_squad'
+                request.session['session_id']=session_id
+                return render(request,'result.html',{'message':'Match session added successfully! \n Here is the information of the match session you added: \n session_id: '+str(session_id)+'\n team_id: '+str(team_id_form)+'\n jury_username: '+str(assigned_jury_username)+'\n date: '+str(date)+'\n time_slot: '+str(time_slot)+'\n stadium_id: '+str(stadium_id),'link':link})
                 #join tables al together recompose them 
                 #return the newly added match session
-                return render(request,'result.html',{'message':'Match session added successfully! \n Here is the information of the match session you added: \n session_id: '+str(session_id)+'\n team_id: '+str(team_id)+'\n jury_username: '+str(assigned_jury_username)+'\n date: '+str(date)+'\n time_slot: '+str(time_slot)+'\n stadium_id: '+str(stadium_id)})
+                
             
                 # Perform any additional processing if needed
+
+                
+                
             else:
                 print("form is not valid")
                 print(form.errors)
@@ -274,3 +322,56 @@ def add_match(request):
     else :
         form = MatchForm()        
         return render(request,'add_match.html',{'match_form':form})
+    
+def add_squad(request):
+    print("hello")
+    form= SquadForm()
+    session_id,team_id,players=get_players_of_team(request)
+    print("session id, team id and players are : ",session_id,team_id,players)
+    if request.method == 'POST':
+        print("posted")
+        form = SquadForm(request.POST)
+        if form.is_valid():
+            # Extract form data
+            player1 = form.cleaned_data['player1']
+            player2 = form.cleaned_data['player2']
+            player3 = form.cleaned_data['player3']
+            player4 = form.cleaned_data['player4']
+            player5 = form.cleaned_data['player5']
+            player6 = form.cleaned_data['player6']
+            team_id_form = form.cleaned_data['team_id']
+            session_id_form= form.cleaned_data['session_id']
+            position1 = form.cleaned_data['position1']
+            position2 = form.cleaned_data['position2']
+            position3 = form.cleaned_data['position3']
+            position4 = form.cleaned_data['position4']
+            position5 = form.cleaned_data['position5']
+            position6 = form.cleaned_data['position6']
+            # Execute SQL query to insert new squad into database
+            #TODO: CHECK IF THE PLAYERS ARE IN THE SAME TEAM WITH THE COACH
+            query_1="SELECT team_id FROM contract WHERE coach_username=%s "
+            username=request.session['username']
+            params_1=(username)
+            teams=execute_query(query_1,params_1)
+            if team_id_form not in teams:
+                return render(request,'result.html',{'message':'You can only add a squad to your own team!'})
+            if session_id_form!=session_id:
+                return render(request,'result.html',{'message':'You can only add a squad to the match session you added!'})
+            for player, position in zip([player1, player2, player3, player4, player5, player6],
+                        [position1, position2, position3, position4, position5, position6]):
+                query = "INSERT INTO playerinmatch (session_id, player_username, position_id) VALUES (%s, %s, %s, %s)"
+                params = (session_id_form, team_id_form, player, position)
+                inserted = execute_query_post(query, params)
+            return render(request,'result.html',{'message':'Squad added successfully!'})
+        else:
+            return render(request,'result.html',{'message':form.errors})
+    else:
+        print("not post")
+        return render(request,'add_squad.html',{'session_id':session_id,'team_id':team_id,'players':players,'squad_form':form})
+def get_players_of_team(request):
+    session_id = request.session['session_id']
+    team_id = request.session['team_id']
+    query = "SELECT username FROM playsin WHERE team_id = %s"
+    params = (team_id,)
+    players = execute_query(query, params)
+    return session_id,team_id,players

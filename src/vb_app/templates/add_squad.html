@@ -1,0 +1,35 @@
+<!--  SPECIFY EXACTLY 6 PLAYERS TO CREATE A SQUAD FOR YOUR NEWLY CRETED SESSION --> 
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Add Squad</title>
+</head>
+<body>
+    <h2>Add Squad</h2>
+    <p>Specify exactly 6 players to create a squad for your newly created session.</p>
+    {% if session_id %}
+        <p>You are creating a squad for the match session with id {{ session_id }}</p>
+    {% else %}
+        <p>No session id available.</p>
+    {% endif %}
+    {% if team_id %}
+        <p>You are coach of the team with id {{ team_id }}</p>
+    {% else %}
+        <p>No team id available.</p>
+    {% endif %}
+    {% if players %}
+        <p>Players available for selection:</p>
+        <ul>
+            {% for player in players %}
+                <li>{{ player }}</li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <p>No players available.</p>
+    {% endif %}
+    <form method="post">
+        {% csrf_token %}
+        {{ squad_form.as_p }}
+        <button type="submit" name="submit_squad">Submit Squad</button>
+    </form>

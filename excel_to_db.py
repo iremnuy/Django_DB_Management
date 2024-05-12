@@ -5,11 +5,11 @@ from sqlalchemy import create_engine
 DATABASE_URI = 'mysql://root:password@127.0.0.1:3308/db'
 
 # Read the Excel file into a pandas DataFrame
-df = pd.read_excel('Sample Data - Project3.xlsx', sheet_name='MatchSession',usecols=['session_ID','assigned_jury_username','rating'])
+df = pd.read_excel('Sample Data - Project3.xlsx', sheet_name='PlayerTeams',usecols=['username','team'])
 
 #df= pd.read_excel('Sample Data - Project3.xlsx', sheet_name='MatchSession',usecols=['stadium_ID', 'stadium_country','stadium_name'])
 #change column name played_player to player_username 
-#df.rename(columns={'played_player_username':'player_username'}, inplace=True) 
+df.rename(columns={'team':'team_id'}, inplace=True) 
 #convert date to the format d-m-y
 #df['contract_start'] = pd.to_datetime(df['contract_start'], format='%d.%m.%Y').dt.strftime('%Y-%m-%d') 
 #df['contract_finish'] = pd.to_datetime(df['contract_finish'], format='%d.%m.%Y').dt.strftime('%Y-%m-%d')
@@ -19,7 +19,7 @@ df = pd.read_excel('Sample Data - Project3.xlsx', sheet_name='MatchSession',usec
 # Connect to your database using SQLAlchemy
 engine = create_engine(DATABASE_URI)
 
-df.to_sql('vb_app_assignedto', con=engine, if_exists='append', index=False)
+df.to_sql('vb_app_playsin', con=engine, if_exists='append', index=False)
 
 
 # Player to vb_app_players
