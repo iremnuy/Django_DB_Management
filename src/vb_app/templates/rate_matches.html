@@ -1,0 +1,27 @@
+<!-- provide session id ,rating and rate a match -->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Rate Matches</title>
+</head>
+<body>
+    <h2>Rate Matches</h2>
+    <p>Provide session id, rating and rate a match.</p>
+    {% if available_matches %}
+        <p>Matches available for rating:</p>
+        <ul>
+            {% for match in available_matches %}
+                <li>{{ match }}</li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <p>No matches assigned to you.</p>
+    {% endif %}
+    <form method="post">
+        {% csrf_token %}
+        {{ rate_match_form.as_p }}
+        <button type="submit" name="submit_rate_match">Submit Rate Match</button>
+    </form>
+</html>

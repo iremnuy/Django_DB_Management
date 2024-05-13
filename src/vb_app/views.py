@@ -1,7 +1,7 @@
 from django.shortcuts import render, redirect
 from django.contrib.auth import authenticate, login
 from vb_app.queries.authenticate_manager import  authenticate_manager,see_stadiums as see_std
-from .forms import PlayerForm, CoachForm, JuryForm,MatchForm,SquadForm
+from .forms import PlayerForm, CoachForm, JuryForm,MatchForm,SquadForm,RateForm
 from django.db import connection
 
 
@@ -414,4 +414,30 @@ def check_positions(zipped_list):
             print("result is",result)
             return False,player
     return True,None
+
+
+def rate_matches(request):
+    form=RateForm()
+    juryname=request.session['username']
+    query="SELECT session_id FROM assignedto WHERE assigned_jury_username=%s "
+    params=(juryname,)
+    available_matches=execute_query(query,params)
+    if request.method=='POST':
+        form = RateForm(request.POST)
+        if form.is_valid():
+            # Extract form data
+            session_id=form.cleaned_data['session_id']
+            rating=form.cleaned_data['rating']
+            # Execute SQL query to insert new squad into database
+            query = "UPDATE assignedto SET rating=%s WHERE assigned_jury_username=%s AND session_id=%s AND rating is NULL" #all matches including already rated ones 
+            params = (rating,juryname,session_id)
+            #if match date is not passed, trigger should not allow to rate by checking playedin table 
+            try:
+                rowcount=execute_query_post(query, params) #ASK: What happens if here a trigger is fired and it fails?
+            except:
+                return render(request,'result.html',{'message':'An error occured while rating the match..Maybe you are trying to rate a future match!'})
+            if rowcount==0:
+                return render(request,'result.html',{'message':'You already rated this match or session id mismatches!'}) 
+            return render(request,'result.html',{'message':'Match rated successfully!'})   
+    return render(request,'rate_matches.html',{'rate_match_form':form,'available_matches':available_matches})
         

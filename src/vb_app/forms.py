@@ -48,3 +48,7 @@ class SquadForm(forms.Form):
     position4 = forms.IntegerField()
     position5 = forms.IntegerField()
     position6 = forms.IntegerField()
+
+class RateForm(forms.Form):
+    session_id = forms.IntegerField()
+    rating = forms.FloatField()    

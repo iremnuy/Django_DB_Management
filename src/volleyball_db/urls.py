@@ -35,6 +35,7 @@ urlpatterns = [
     path('view_ratings/',views.view_ratings,name='view_ratings'),
     path('add_match/',views.add_match,name='add_match'),
     path('add_squad/',views.add_squad,name='add_squad'),
+    path('rate_match/',views.rate_matches,name='rate_match'),
 ]
 """
 path('create_squad/',views.create_squad,name='create_squad'),
