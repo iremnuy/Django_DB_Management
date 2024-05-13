@@ -1,0 +1,19 @@
+<!-- height_of_most_played.html -->
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Most Played With Player's Height</title>
+</head>
+
+<body>
+    <h1>Height of Most Frequently Played With Players</h1>
+    {% if average_height %}
+    <p>Average Height: {{ average_height }} cm</p>
+    {% else %}
+    <p>No data available.</p>
+    {% endif %}
+</body>
+
+</html>

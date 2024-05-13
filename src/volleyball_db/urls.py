@@ -35,6 +35,10 @@ urlpatterns = [
     path('view_ratings/',views.view_ratings,name='view_ratings'),
     path('add_match/',views.add_match,name='add_match'),
     path('add_squad/',views.add_squad,name='add_squad'),
+    path('dash_player/', views.dashboard_player, name='dash_player'),
+    path('get_other_players/', views.view_played_with_players, name='get_other_players'),
+    path('height_of_most_played/', views.view_height_of_most_played, name='height_of_most_played'),
+
 ]
 """
 path('create_squad/',views.create_squad,name='create_squad'),
