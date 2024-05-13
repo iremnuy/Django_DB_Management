@@ -1,0 +1,22 @@
+<!-- played_with_players.html -->
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Players You Have Played With</title>
+</head>
+
+<body>
+    <h2>Players You Have Played With</h2>
+    <h3>List of Players:</h3>
+    <ul>
+        {% for player in played_with_players %}
+        <li>{{ player.name }} {{ player.surname }}</li>
+        {% empty %}
+        <li>No players found.</li>
+        {% endfor %}
+    </ul>
+</body>
+
+</html>

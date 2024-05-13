@@ -440,4 +440,58 @@ def rate_matches(request):
                 return render(request,'result.html',{'message':'You already rated this match or session id mismatches!'}) 
             return render(request,'result.html',{'message':'Match rated successfully!'})   
     return render(request,'rate_matches.html',{'rate_match_form':form,'available_matches':available_matches})
-        
+
+def view_height_of_most_played(request):
+    current_player_username = request.session.get('username')
+    if not current_player_username:
+        return redirect('login')  # Redirect if not logged in
+
+    most_played_with_height_query = """
+    SELECT AVG(players.height) AS average_height
+    FROM (
+        SELECT other.player_username
+        FROM playerinmatch AS current
+        JOIN playerinmatch AS other ON current.session_id = other.session_id
+        WHERE current.player_username = %s AND current.player_username != other.player_username
+        GROUP BY other.player_username
+        HAVING COUNT(*) = (
+            SELECT MAX(num_matches)
+            FROM (
+                SELECT COUNT(*) AS num_matches
+                FROM playerinmatch AS current
+                JOIN playerinmatch AS other ON current.session_id = other.session_id
+                WHERE current.player_username = %s AND current.player_username != other.player_username
+                GROUP BY other.player_username
+            ) AS max_matches
+        )
+    ) AS most_played
+    JOIN players ON most_played.player_username = players.username
+    """
+
+    with connection.cursor() as cursor:
+        cursor.execute(most_played_with_height_query, [current_player_username, current_player_username])
+        result = cursor.fetchone()
+        average_height = result[0] if result else None  # Safe access to the first element
+
+    return render(request, 'height_of_most_played.html', {'average_height': average_height})
+
+def view_played_with_players(request):
+    current_player_username = request.session.get('username')
+    if not current_player_username:
+        return redirect('login')  # Redirect if not logged in
+
+    played_with_query = """
+    SELECT DISTINCT players.username, players.name, players.surname
+    FROM playerinmatch AS current
+    JOIN playerinmatch AS other ON current.session_id = other.session_id
+    JOIN players ON other.player_username = players.username
+    WHERE current.player_username = %s AND current.player_username != other.player_username
+    """
+    with connection.cursor() as cursor:
+        cursor.execute(played_with_query, [current_player_username])
+        played_with_players = cursor.fetchall()
+
+    # Transform result into a list of dicts for easier handling in the template
+    players_list = [{'username': row[0], 'name': row[1], 'surname': row[2]} for row in played_with_players]
+
+    return render(request, 'played_with_players.html', {'played_with_players': players_list})
